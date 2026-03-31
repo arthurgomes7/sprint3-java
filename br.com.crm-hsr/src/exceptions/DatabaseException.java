@@ -1,4 +1,4 @@
 package exceptions;
 
-public class DatabaseException {
+public class DatabaseException extends RuntimeException{
 }

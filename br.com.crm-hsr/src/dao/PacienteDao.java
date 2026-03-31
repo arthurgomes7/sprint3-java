@@ -1,4 +1,5 @@
 package dao;
 
-public class PacienteDao {
+public interface PacienteDao {
+    void criarPaciente();
 }
