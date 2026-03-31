@@ -1,6 +1,7 @@
 package model;
 
 public class Pessoa {
+    private Long id;
     private String name;
     private String email;
     private String number;
@@ -14,6 +15,14 @@ public class Pessoa {
         this.email = email;
         this.number = number;
         this.dateBirthday = dateBirthday;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

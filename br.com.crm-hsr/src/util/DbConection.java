@@ -1,6 +1,8 @@
 package util;
 
 
+import exceptions.DatabaseException;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -20,7 +22,7 @@ public class DbConection {
             }
         }
         catch (SQLException e){
-            e.printStackTrace();
+            throw new DatabaseException("Erro ao conectar ao Banco de Dados: " + e.getMessage());
         }
         return connection;
     }
