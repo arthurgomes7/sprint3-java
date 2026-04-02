@@ -14,10 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MedicoDaoImpl implements MedicoDao {
-    private final Connection connection;
+    Connection conexaoDB = DbConection.getConnection();
 
     public MedicoDaoImpl() {
-        this.connection = DbConection.getConnection();
         criarTabela();
     }
 
@@ -44,11 +43,14 @@ public class MedicoDaoImpl implements MedicoDao {
                         END IF;
                 END;
                 """;
+        try (Connection conn = DbConection.getConnection();
+             Statement stmt = conn.createStatement()) {
 
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
+            stmt.execute(sql);
+            System.out.println("Tabela 'Medico' verificada/criada com sucesso!");
+
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao criar tabela MEDICO: " + e.getMessage());
+            throw new DatabaseException("Erro ao criar tabela (DAO): " + e.getMessage());
         }
     }
 
@@ -56,7 +58,8 @@ public class MedicoDaoImpl implements MedicoDao {
     public void criar(Medico medico) {
         String sql = "INSERT INTO MEDICO (NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY, CRM, ESPECIALIDADE, DISPONIBILIDADE_MEDICO) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, medico.getName());
             statement.setString(2, medico.getEmail());
             statement.setString(3, medico.getNumber());
@@ -74,7 +77,8 @@ public class MedicoDaoImpl implements MedicoDao {
     public Medico buscarPorId(Long id) {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY, CRM, ESPECIALIDADE, DISPONIBILIDADE_MEDICO FROM MEDICO WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setLong(1, id);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -93,7 +97,8 @@ public class MedicoDaoImpl implements MedicoDao {
     public Medico buscarPorEmail(String email) {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY, CRM, ESPECIALIDADE, DISPONIBILIDADE_MEDICO FROM MEDICO WHERE EMAIL = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, email);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -113,7 +118,8 @@ public class MedicoDaoImpl implements MedicoDao {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY, CRM, ESPECIALIDADE, DISPONIBILIDADE_MEDICO FROM MEDICO WHERE UPPER(NAME) LIKE UPPER(?)";
         List<Medico> medicos = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, "%" + nome + "%");
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -133,8 +139,9 @@ public class MedicoDaoImpl implements MedicoDao {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY, CRM, ESPECIALIDADE, DISPONIBILIDADE_MEDICO FROM MEDICO ORDER BY NAME";
         List<Medico> medicos = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet resultSet = stmt.executeQuery()) {
 
             while (resultSet.next()) {
                 medicos.add(mapMedico(resultSet));
@@ -150,7 +157,8 @@ public class MedicoDaoImpl implements MedicoDao {
     public void atualizar(Medico medico) {
         String sql = "UPDATE MEDICO SET NAME = ?, EMAIL = ?, PHONE_NUMBER = ?, DATE_BIRTHDAY = ?, CRM = ?, ESPECIALIDADE = ?, DISPONIBILIDADE_MEDICO = ? WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, medico.getName());
             statement.setString(2, medico.getEmail());
             statement.setString(3, medico.getNumber());
@@ -169,7 +177,8 @@ public class MedicoDaoImpl implements MedicoDao {
     public void deletar(Long id) {
         String sql = "DELETE FROM MEDICO WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {

@@ -13,14 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PacienteDaoImpl implements PacienteDao{
-    private final Connection connection;
+    Connection conexaoDB = DbConection.getConnection();
 
     public PacienteDaoImpl() {
-        this.connection = DbConection.getConnection();
         criarTabela();
     }
 
-    public void criarTabela() {
+    private void criarTabela() {
         String sql = """
                 BEGIN
                     EXECUTE IMMEDIATE '
@@ -31,8 +30,8 @@ public class PacienteDaoImpl implements PacienteDao{
                             PHONE_NUMBER VARCHAR2(20),
                             DATE_BIRTHDAY VARCHAR2(20),
                             PRIMARY KEY (ID)
-                        )
-                    ';
+                    )
+                ';
                 EXCEPTION
                     WHEN OTHERS THEN
                         IF SQLCODE != -955 THEN
@@ -40,11 +39,14 @@ public class PacienteDaoImpl implements PacienteDao{
                         END IF;
                 END;
                 """;
+        try (Connection conn = DbConection.getConnection();
+             Statement stmt = conn.createStatement()) {
 
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sql);
+            stmt.execute(sql);
+            System.out.println("Tabela 'Paciente' verificada/criada com sucesso!");
+
         } catch (SQLException e) {
-            throw new DatabaseException("Erro ao criar tabela PACIENTE: " + e.getMessage());
+            throw new DatabaseException("Erro ao criar tabela (DAO): " + e.getMessage());
         }
     }
 
@@ -52,12 +54,13 @@ public class PacienteDaoImpl implements PacienteDao{
     public void criar(Paciente paciente) {
         String sql = "INSERT INTO PACIENTE (NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, paciente.getName());
-            statement.setString(2, paciente.getEmail());
-            statement.setString(3, paciente.getNumber());
-            statement.setString(4, paciente.getDateBirthday());
-            statement.executeUpdate();
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, paciente.getName());
+            stmt.setString(2, paciente.getEmail());
+            stmt.setString(3, paciente.getNumber());
+            stmt.setString(4, paciente.getDateBirthday());
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao criar paciente: " + e.getMessage());
         }
@@ -67,10 +70,11 @@ public class PacienteDaoImpl implements PacienteDao{
     public Paciente buscarPorId(Long id) {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY FROM PACIENTE WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
                     return mapPaciente(resultSet);
                 }
@@ -86,10 +90,11 @@ public class PacienteDaoImpl implements PacienteDao{
     public Paciente buscarPorEmail(String email) {
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY FROM PACIENTE WHERE EMAIL = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, email);
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
                     return mapPaciente(resultSet);
                 }
@@ -106,10 +111,11 @@ public class PacienteDaoImpl implements PacienteDao{
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY FROM PACIENTE WHERE UPPER(NAME) LIKE UPPER(?)";
         List<Paciente> pacientes = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, "%" + nome + "%");
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, "%" + nome + "%");
 
-            try (ResultSet resultSet = statement.executeQuery()) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
                 while (resultSet.next()) {
                     pacientes.add(mapPaciente(resultSet));
                 }
@@ -126,8 +132,9 @@ public class PacienteDaoImpl implements PacienteDao{
         String sql = "SELECT ID, NAME, EMAIL, PHONE_NUMBER, DATE_BIRTHDAY FROM PACIENTE ORDER BY NAME";
         List<Paciente> pacientes = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet resultSet = stmt.executeQuery()) {
 
             while (resultSet.next()) {
                 pacientes.add(mapPaciente(resultSet));
@@ -143,13 +150,14 @@ public class PacienteDaoImpl implements PacienteDao{
     public void atualizar(Paciente paciente) {
         String sql = "UPDATE PACIENTE SET NAME = ?, EMAIL = ?, PHONE_NUMBER = ?, DATE_BIRTHDAY = ? WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, paciente.getName());
-            statement.setString(2, paciente.getEmail());
-            statement.setString(3, paciente.getNumber());
-            statement.setString(4, paciente.getDateBirthday());
-            statement.setLong(5, paciente.getId());
-            statement.executeUpdate();
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, paciente.getName());
+            stmt.setString(2, paciente.getEmail());
+            stmt.setString(3, paciente.getNumber());
+            stmt.setString(4, paciente.getDateBirthday());
+            stmt.setLong(5, paciente.getId());
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao atualizar paciente: " + e.getMessage());
         }
@@ -159,9 +167,10 @@ public class PacienteDaoImpl implements PacienteDao{
     public void deletar(Long id) {
         String sql = "DELETE FROM PACIENTE WHERE ID = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, id);
-            statement.executeUpdate();
+        try (Connection conn = DbConection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Erro ao deletar paciente: " + e.getMessage());
         }
