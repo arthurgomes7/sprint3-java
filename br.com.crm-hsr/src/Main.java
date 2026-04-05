@@ -32,6 +32,13 @@ public class Main {
         paciente.setDateBirthday("2000-01-01");
         pacienteDao.criar(paciente);
 
+        Paciente paciente1 = new Paciente();
+        paciente1.setName("Arthur");
+        paciente1.setEmail("arthur@hospital.com");
+        paciente1.setNumber("11988599493");
+        paciente1.setDateBirthday("2005-03-23");
+        pacienteDao.criar(paciente1);
+
         Medico medico = new Medico();
         medico.setName("Medico Teste");
         medico.setEmail(emailMedicoTeste);
