@@ -7,6 +7,7 @@ import model.Consulta;
 import model.DisponibilidadeMedico;
 import model.Medico;
 import model.Paciente;
+import service.MedicoService;
 import service.PacienteService;
 
 import java.util.List;
@@ -16,6 +17,7 @@ public class Main {
         PacienteDao pacienteDao = new PacienteDaoImpl();
         MedicoDao medicoDao = new MedicoDaoImpl();
         PacienteService pacienteService = new PacienteService();
+        MedicoService medicoService = new MedicoService();
 
         String emailPacienteTeste = "paciente.teste@hsr.com";
         String emailMedicoTeste = "medico.teste@hsr.com";
@@ -44,15 +46,64 @@ public class Main {
         Medico medicoSalvo = medicoDao.buscarPorEmail(emailMedicoTeste);
 
         try {
-            pacienteService.agendarConsulta(pacienteSalvo.getId(), medicoSalvo.getId());
-            System.out.println("Consulta agendada com sucesso.");
+            System.out.println("==== TESTE 1: TRIAGEM ====");
+            Paciente pacienteTriado = pacienteService.realizarTriagem(
+                    pacienteSalvo.getId(),
+                    "dor no peito e falta de ar",
+                    125,
+                    39.1
+            );
+            System.out.println("Sintomas registrados: " + pacienteTriado.getSintomas());
+            System.out.println("Prioridade calculada: " + pacienteTriado.getPrioridadeTriagem());
+            System.out.println("Triagem realizada: " + pacienteTriado.isTriagemRealizada());
+            System.out.println("Tempo maximo de espera: " + pacienteTriado.getTempoMaximoEsperaMinutos() + " minutos");
+            if (!"ALTA".equals(pacienteTriado.getPrioridadeTriagem())
+                    || !pacienteTriado.isTriagemRealizada()
+                    || pacienteTriado.getTempoMaximoEsperaMinutos() == null
+                    || pacienteTriado.getTempoMaximoEsperaMinutos() != 10) {
+                throw new RuntimeException("Teste da triagem falhou.");
+            }
+            System.out.println("Teste da triagem finalizado com sucesso.");
 
-            List<Consulta> consultas = pacienteService.listarConsultasDoPaciente(pacienteSalvo.getId());
+            System.out.println("==== TESTE 2: AGENDAMENTO ====");
+            pacienteService.agendarConsulta(pacienteTriado.getId(), medicoSalvo.getId());
+            List<Consulta> consultas = pacienteService.listarConsultasDoPaciente(pacienteTriado.getId());
             System.out.println("Consultas encontradas para o paciente: " + consultas.size());
-
+            if (consultas.isEmpty()) {
+                throw new RuntimeException("Teste do agendamento falhou.");
+            }
             for (Consulta consulta : consultas) {
                 System.out.println(consulta);
             }
+            System.out.println("Teste do agendamento finalizado com sucesso.");
+
+            System.out.println("==== TESTE 3: INICIAR ATENDIMENTO ====");
+            Medico medicoEmAtendimento = medicoService.iniciarAtendimento(medicoSalvo.getId(), pacienteTriado.getId());
+            System.out.println("Disponibilidade do medico: " + medicoEmAtendimento.getDisponibilidadeMedico());
+            System.out.println("Paciente em atendimento: " + medicoEmAtendimento.getPacienteEmAtendimento().getName());
+            if (medicoEmAtendimento.getDisponibilidadeMedico() != DisponibilidadeMedico.OCUPADO
+                    || medicoEmAtendimento.getPacienteEmAtendimento() == null) {
+                throw new RuntimeException("Teste de iniciar atendimento falhou.");
+            }
+            System.out.println("Teste de iniciar atendimento finalizado com sucesso.");
+
+            System.out.println("==== TESTE 4: INFORMACOES DO PACIENTE EM ATENDIMENTO ====");
+            Paciente pacienteEmAtendimento = medicoService.informacoesDoPacienteDaConsulta(medicoSalvo.getId());
+            if (pacienteTriado == null
+                    || !pacienteTriado.getId().equals(pacienteTriado.getId())) {
+                throw new RuntimeException("Teste da consulta de informacoes do paciente falhou.");
+            }
+            System.out.println("Teste da consulta de informacoes finalizado com sucesso.");
+
+            System.out.println("==== TESTE 5: FINALIZAR ATENDIMENTO ====");
+            Medico medicoFinalizado = medicoService.finalizarAtendimento(medicoSalvo.getId());
+            System.out.println("Disponibilidade do medico apos finalizar: " + medicoFinalizado.getDisponibilidadeMedico());
+            System.out.println("Paciente associado apos finalizar: " + medicoFinalizado.getPacienteEmAtendimento());
+            if (medicoFinalizado.getDisponibilidadeMedico() != DisponibilidadeMedico.DISPONIVEL
+                    || medicoFinalizado.getPacienteEmAtendimento() != null) {
+                throw new RuntimeException("Teste de finalizar atendimento falhou.");
+            }
+            System.out.println("Teste de finalizar atendimento finalizado com sucesso.");
         } catch (EntityException e) {
             System.out.println("Erro de validacao: " + e.getMessage());
         } catch (RuntimeException e) {

@@ -44,10 +44,9 @@ public class Consulta {
     @Override
     public String toString() {
         return "Consulta{" +
-                "id=" + id +
                 ", date=" + date +
-                ", paciente=" + paciente +
-                ", medico=" + medico +
+                ", paciente=" + paciente.getName() +
+                ", medico=" + medico.getName() +
                 '}';
     }
 }

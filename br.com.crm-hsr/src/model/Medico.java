@@ -1,9 +1,10 @@
 package model;
 
-public class Medico extends Pessoa{
+public class Medico extends Pessoa {
     private String crm;
     private String especialidade;
     private DisponibilidadeMedico disponibilidadeMedico;
+    private Paciente pacienteEmAtendimento;
 
     public String getCrm() {
         return crm;
@@ -27,5 +28,13 @@ public class Medico extends Pessoa{
 
     public void setDisponibilidadeMedico(DisponibilidadeMedico disponibilidadeMedico) {
         this.disponibilidadeMedico = disponibilidadeMedico;
+    }
+
+    public Paciente getPacienteEmAtendimento() {
+        return pacienteEmAtendimento;
+    }
+
+    public void setPacienteEmAtendimento(Paciente pacienteEmAtendimento) {
+        this.pacienteEmAtendimento = pacienteEmAtendimento;
     }
 }

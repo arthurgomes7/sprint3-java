@@ -80,59 +80,6 @@ No metodo `getConnection()`, a conexao so e criada se:
 - ainda nao existir, ou
 - estiver fechada.
 
-## Modelos e utilidade de cada classe
-
-### `model.Pessoa`
-
-Classe base para representar dados comuns de uma pessoa.
-
-Campos principais:
-
-- `id`
-- `name`
-- `email`
-- `number`
-- `dateBirthday`
-
-### `model.Paciente`
-Utilidade:
-- especializar a entidade para a camada de negocio e persistencia;
-- permitir regras especificas de paciente no futuro.
-
-### `model.Medico`
-
-Representa uma entidade Medico
-Campos adicionais:
-
-- `crm`
-- `especialidade`
-- `disponibilidadeMedico`
-
-### `model.DisponibilidadeMedico`
-
-Enum que define o estado de disponibilidade do medico.
-
-Valores:
-
-- `DISPONIVEL`
-- `OCUPADO`
-
-Utilidade:
-
-- padronizar o status do medico;
-- permitir validacao no agendamento de consulta.
-
-### `model.Consulta`
-
-Representa uma consulta entre paciente e medico.
-
-Campos:
-
-- `id`
-- `date`
-- `paciente`
-- `medico`
-
 ## Camada DAO
 
 As interfaces DAO definem o contrato de persistencia. As classes `Impl` implementam esse contrato com JDBC.
@@ -148,25 +95,6 @@ Metodos:
 - `listarTodos()`: retorna todos os pacientes;
 - `atualizar(Paciente paciente)`: atualiza os dados do paciente;
 - `deletar(Long id)`: remove o paciente pelo id.
-
-## Camada de servico
-
-### `service.PacienteService`
-
-Centraliza a regra de negocio ligada ao paciente e ao agendamento.
-Funcoes:
-
-- `PacienteService()`: instancia os DAOs necessarios;
-- `agendarConsulta(Long pacienteId, Long medicoId)`: valida ids, verifica se paciente e medico existem, valida se o medico esta `DISPONIVEL` e cria uma nova `Consulta`;
-- `listarConsultasDoPaciente(Long pacienteId)`: valida o id, verifica se o paciente existe e retorna apenas as consultas associadas a ele.
-
-### `service.MedicoService`
-
-Classe reservada para regras de negocio do medico.
-
-Funcao atual:
-
-- `informacoesDoPacienteDaConsulta(Long idConsulta)`: metodo previsto para exibir dados do paciente de uma consulta, mas ainda nao implementado.
 
 ## Tratamento de excecoes
 
